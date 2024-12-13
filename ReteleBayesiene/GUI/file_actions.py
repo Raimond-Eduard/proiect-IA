@@ -1,6 +1,4 @@
-
-
-class FileActions():
+class FileActions:
     @staticmethod
     def create_new_graph(event=None):
         # Functie de sters si de generat o noua zona goala pentru un graf nou
