@@ -1,3 +1,6 @@
+from tkinter.filedialog import askopenfile
+
+
 class FileActions:
     @staticmethod
     def create_new_graph(event=None):
@@ -10,8 +13,6 @@ class FileActions:
     @staticmethod
     def open_file(event=None):
         # Deschiderea unui graf dintr-un fisier
-        print("This will later open the file selector and try to use a json or xml to parse it's content")
-    @staticmethod
-    def open_custom_sample(event=None):
-        # Va deschide unul dintre modelele predefinite
-        print("This will open custom graphs") # Probabil vom avea maxim 2 graph-uri predefinite
+        # print("This will later open the file selector and try to use a json or xml to parse it's content")
+        file = askopenfile()
+        print(file)

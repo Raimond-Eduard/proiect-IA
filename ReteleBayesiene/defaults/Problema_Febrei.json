@@ -1,24 +1,26 @@
 {
-  "G": {
+  "Gripa": {
     "parents": [],
     "prob": {
       "()": {
         "Da": 0.1,
         "Nu": 0.9
       }
-    }
+    },
+    "position": {"x": 120, "y" : 100}
   },
-  "A": {
+  "Abces": {
     "parents": [],
     "prob": {
       "()": {
         "Da": 0.05,
         "Nu": 0.95
       }
-    }
+    },
+    "position": {"x": 320, "y" : 100}
   },
-  "F": {
-    "parents": ["G", "A"],
+  "Febra": {
+    "parents": ["Gripa", "Abces"],
     "prob": {
       "('Da', 'Da')": {
         "Da": 0.8,
@@ -36,10 +38,11 @@
         "Da": 0.05,
         "Nu": 0.95
       }
-    }
+    },
+    "position": {"x": 260, "y" : 150}
   },
-  "O": {
-    "parents": ["F"],
+  "Oboseala": {
+    "parents": ["Febra"],
     "prob": {
       "('Da',)": {
         "Da": 0.6,
@@ -49,10 +52,11 @@
         "Da": 0.2,
         "Nu": 0.8
       }
-    }
+    },
+    "position": {"x": 120, "y" : 300}
   },
-  "N": {
-    "parents": ["F"],
+  "Anorexie": {
+    "parents": ["Febra"],
     "prob": {
       "('Da',)": {
         "Da": 0.5,
@@ -62,6 +66,7 @@
         "Da": 0.1,
         "Nu": 0.9
       }
-    }
+    },
+    "position": {"x": 320, "y" : 300}
   }
 }

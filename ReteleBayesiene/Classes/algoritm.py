@@ -1,24 +1,16 @@
-import json
+from IO.json_parser import Parser
 from collections import deque
 
 class BayesianNetwork:
     def __init__(self, filename):
-        self.retea = self.load_retea_from_json(filename)
+        self.retea = Parser.load_retea_from_json(filename)
 
-    def load_retea_from_json(self, filename):
-        with open(filename, 'r') as f:
-            data = json.load(f)
-
-        new_data = {}
-        for var, info in data.items():
-            new_info = info.copy()
-            new_prob = {}
-            for cond_str, val in info['prob'].items():
-                cond_tuple = eval(cond_str)
-                new_prob[cond_tuple] = val
-            new_info['prob'] = new_prob
-            new_data[var] = new_info
-        return new_data
+    def get_node_positions(self):
+        # Returneaza lista (sau dictionar) cu positiile fiecarei variable
+        res = {}
+        for i in self.retea.keys():
+            res[i] = self.retea[i]['position']
+        return res
 
     def variables(self):
         # Returneaza lista variabilelor din retea
@@ -93,10 +85,11 @@ class EnumerationInference:
                 total += self.bn.p(Y, y_val, new_evidence)*self.enumerate_all(rest, new_evidence)
             return total
 
+if __name__ == "__main__":
+    retea = BayesianNetwork('../defaults/Problema_Febrei.json')
+    engine = EnumerationInference(retea)
 
-retea = BayesianNetwork('retea.json')
-engine = EnumerationInference(retea)
-
-evidence = {'G': 'Nu', 'A': 'Nu', 'N': 'Nu'}
-result = engine.enumeration_ask('O', evidence)
-print(result)
+    evidence = {'Gripa': 'Nu', 'Abces': 'Nu', 'Anorexie': 'Nu'}
+    result = engine.enumeration_ask('Oboseala', evidence)
+    print(result)
+    print("This is just for testing purpose, to run hit on main.py")

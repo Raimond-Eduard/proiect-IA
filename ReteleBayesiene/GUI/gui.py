@@ -2,11 +2,14 @@ import tkinter as tk
 
 from Classes.states import StateManager, States
 from GUI.file_actions import FileActions as fa
-
+from gui_helper_functions import Helper
 
 class GUI(tk.Tk):
     def __init__(self, state=States.CREATE):
         super().__init__()
+
+        # Aici sunt variabile de stare ale interfetei
+        self.enable_create = False
 
         # Initializare state machine (create sau solve)
         self.state = StateManager()
@@ -35,7 +38,7 @@ class GUI(tk.Tk):
         # Speram sa avem timp sa implementam si asta
         self.file_menu.add_command(
             label="Load Custom Graph",
-            command=fa.open_custom_sample,
+            command=self.open_custom_sample, # TO DO - open custom sample
             compound=tk.LEFT
         )
 
@@ -117,7 +120,20 @@ class GUI(tk.Tk):
         self.canvas.configure(yscrollcommand=self.scrollbar.set, xscrollcommand=self.h_scrollbar.set)
 
         # Linie de testat canvas, va fi stearsa mai tarziu
-        self.line = self.canvas.create_line(20, 50, 1900, 800, fill="red")
+        # self.line = self.canvas.create_line(20, 50, 1900, 800, fill="red")
+
+    def open_custom_sample(self):
+        top = tk.Toplevel(self)
+        top.geometry("720x240")
+        top.title("Custom Graph")
+
+        listbox = tk.Listbox(top, width=40, height=10, selectmode=tk.SINGLE)
+
+        listbox.insert(1, "Problema Febrei")
+
+        btn = tk.Button(top, text='Load Selection', command=lambda: Helper.get_selected_value(listbox))
+        btn.pack(side='bottom')
+        listbox.pack()
 
     def set_create_frame(self):
         '''
