@@ -1,15 +1,24 @@
 import tkinter as tk
 
-from Classes.states import StateManager, States
+from PyQt5.QtCore.QUrl import password
+
+from Enums.states import StateManager, States
 from GUI.file_actions import FileActions as fa
-from gui_helper_functions import Helper
+from GUI.gui_helper_functions import Helper
 
 class GUI(tk.Tk):
     def __init__(self, state=States.CREATE):
         super().__init__()
 
         # Aici sunt variabile de stare ale interfetei
-        self.enable_create = False
+        # Prima este un dictionar cu string-uri ce are ca scop afisarea de indicii
+        # in interfata pentru utilizator ca sa inteleaga ce actiune este activa la momentul respectiv
+        self.helper_text = {
+            "Create" : "Create mode: Click on the canvas below to create a node",
+            "Select" : "Select mode: Click on a node to select it and change properties",
+            "Make Observation" : "Make Observation mode: Click on a node to specify if it has a specific value before querying",
+            "Query" : "Query mode: Click on a node to query it\'s probability"
+        }
 
         # Initializare state machine (create sau solve)
         self.state = StateManager()
@@ -90,6 +99,14 @@ class GUI(tk.Tk):
         self.solve_button = tk.Button(self.state_frame, text="Solve", command=lambda: self.switch_states(States.SOLVE))
         self.solve_button.pack(side="left", padx=10)
 
+        # Text label care indica hint-uri catre utilizator
+        self.hint_textVariable = tk.StringVar()
+        self.hint_textVariable.set("")
+
+        self.hint_label = tk.Label(self.state_frame, textvariable=self.hint_textVariable)
+        self.hint_label.pack(side="right", padx=10)
+
+
         # Interfata va porni in mod default pe CREATE, asadar butonul create va fi dimmed
         self.create_button.config(state=tk.DISABLED)
 
@@ -154,6 +171,8 @@ class GUI(tk.Tk):
         tk.Button(self.actions_frame, text="Make Observation").pack(pady=5, padx=10, side=tk.LEFT, anchor=tk.NW)
         tk.Button(self.actions_frame, text="Query").pack(pady=5, padx=10, side=tk.LEFT, anchor=tk.NW)
 
+
+
     def switch_states(self,state):
 
         self.state.__setstate__(state)
@@ -161,14 +180,14 @@ class GUI(tk.Tk):
         for widget in self.actions_frame.winfo_children():
             widget.destroy()
 
-        if state == States.CREATE:
+        if self.state == States.CREATE:
 
             self.create_button.config(state=tk.DISABLED)
             self.solve_button.config(state=tk.NORMAL)
 
             self.set_create_frame()
 
-        elif state == States.SOLVE:
+        elif self.state == States.SOLVE:
 
             self.solve_button.config(state=tk.DISABLED)
             self.create_button.config(state=tk.NORMAL)
