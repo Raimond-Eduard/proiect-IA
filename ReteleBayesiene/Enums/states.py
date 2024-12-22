@@ -1,23 +1,21 @@
 from enum import Enum
 
-class States(Enum):
+class StateManager(Enum):
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.value == other.value
+
+class States(StateManager):
     CREATE = 1
     SOLVE = 2
 
-class StateManager:
-    def __init__(self, state=States.CREATE):
-        self.state = state
 
-    def __getstate__(self):
-        return self.state
-
-
-class CreateStates(Enum):
+class CreateStates(StateManager):
+    FREE = 0
     CREATE = 1
     SELECT = 2
 
 
-
-class SolveStates(Enum):
+class SolveStates(StateManager):
+    FREE = 0
     MAKE_OBSERVATION = 1
     QUERY = 2

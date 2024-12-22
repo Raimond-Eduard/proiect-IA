@@ -1,7 +1,7 @@
 import tkinter as tk
 
 
-from Enums.states import StateManager, States
+from Enums.states import States, CreateStates, SolveStates
 from GUI.file_actions import FileActions as fa
 from GUI.gui_helper_functions import Helper
 
@@ -21,10 +21,12 @@ class GUI(tk.Tk):
 
         # Pozitiile mouse-ului pe x si pe y in canvas
         self.mouse_x = None
-        self.moues_y = None
+        self.mouse_y = None
 
-        # Initializare state machine (create sau solve)
-        self.state = StateManager()
+        # Initializare state machine
+        self.state = States.CREATE
+        self.create_states = CreateStates.FREE
+        self.solve_states = SolveStates.FREE
 
         # Initializarea dimensiunilor si titlului
         self.geometry("1240x640")
@@ -146,9 +148,10 @@ class GUI(tk.Tk):
 
     def get_mouse_coords(self, event):
         self.mouse_x = event.x
-        self.moues_y = event.y
-        print(f"X: {self.mouse_x}")
-        print(f"Y: {self.moues_y}")
+        self.mouse_y = event.y
+        if self.state == States.CREATE and self.create_states == CreateStates.CREATE:
+            self.canvas.create_oval(self.mouse_x - 30, self.mouse_y - 30, self.mouse_x + 30, self.mouse_y + 30)
+            self.create_states = CreateStates.FREE
 
     def open_custom_sample(self):
         top = tk.Toplevel(self)
@@ -169,9 +172,14 @@ class GUI(tk.Tk):
         cu butoane in cazul in care starea este pe create
         :return: void
         '''
-        tk.Button(self.actions_frame, text="Create").pack(pady=5, padx=10, side=tk.LEFT, anchor=tk.NW)
+        tk.Button(self.actions_frame, text="Create", command=self.create_node).pack(pady=5, padx=10, side=tk.LEFT, anchor=tk.NW)
         tk.Button(self.actions_frame, text="Select").pack(pady=5, padx=10, side=tk.LEFT, anchor=tk.NW)
         # Trebuie adaugate alte butoane
+
+    def create_node(self):
+        self.hint_textVariable.set("Click on the canvas below to create a node")
+        self.create_states = CreateStates.CREATE
+        # TO DO: Adaugarea logicii si a altor actiuni in starea asta
 
     def set_solve_frame(self):
         '''
