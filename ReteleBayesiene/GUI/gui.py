@@ -1,6 +1,5 @@
 import tkinter as tk
 
-from PyQt5.QtCore.QUrl import password
 
 from Enums.states import StateManager, States
 from GUI.file_actions import FileActions as fa
@@ -19,6 +18,10 @@ class GUI(tk.Tk):
             "Make Observation" : "Make Observation mode: Click on a node to specify if it has a specific value before querying",
             "Query" : "Query mode: Click on a node to query it\'s probability"
         }
+
+        # Pozitiile mouse-ului pe x si pe y in canvas
+        self.mouse_x = None
+        self.moues_y = None
 
         # Initializare state machine (create sau solve)
         self.state = StateManager()
@@ -127,6 +130,7 @@ class GUI(tk.Tk):
         # Canvasul propriu-zis
         self.canvas = tk.Canvas(self.canvas_frame, bg="white", width=1920, height=1080)
         self.canvas.pack(side="left", fill="y")
+        self.canvas.bind("<Button-1>", self.get_mouse_coords)
 
         # Scrollbar
         self.scrollbar = tk.Scrollbar(self.canvas_frame, orient="vertical", command=self.canvas.yview)
@@ -136,8 +140,15 @@ class GUI(tk.Tk):
 
         self.canvas.configure(yscrollcommand=self.scrollbar.set, xscrollcommand=self.h_scrollbar.set)
 
+
         # Linie de testat canvas, va fi stearsa mai tarziu
         # self.line = self.canvas.create_line(20, 50, 1900, 800, fill="red")
+
+    def get_mouse_coords(self, event):
+        self.mouse_x = event.x
+        self.moues_y = event.y
+        print(f"X: {self.mouse_x}")
+        print(f"Y: {self.moues_y}")
 
     def open_custom_sample(self):
         top = tk.Toplevel(self)
@@ -175,10 +186,11 @@ class GUI(tk.Tk):
 
     def switch_states(self,state):
 
-        self.state.__setstate__(state)
+        self.state = state
 
         for widget in self.actions_frame.winfo_children():
             widget.destroy()
+
 
         if self.state == States.CREATE:
 

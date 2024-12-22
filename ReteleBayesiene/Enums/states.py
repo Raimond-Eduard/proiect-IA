@@ -11,10 +11,6 @@ class StateManager:
     def __getstate__(self):
         return self.state
 
-    def __setstate__(self, state):
-        if state not in [States.CREATE, States.SOLVE]:
-            raise Exception("Invalid state, somehow you managed to insert a 3rd state")
-        self.state = state
 
 class CreateStates(Enum):
     CREATE = 1
