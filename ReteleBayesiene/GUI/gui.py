@@ -1,17 +1,14 @@
 import tkinter as tk
-
-from sympy.functions.combinatorial.numbers import stirling
+from tkinter import messagebox as msg
 
 from Enums.states import States, CreateStates, SolveStates
 from GUI.file_actions import FileActions as fa
 from GUI.gui_helper_functions import Helper
-from Classes.Node import Node
+from Classes.Node import Node, Coord
 
 class GUI(tk.Tk):
     def __init__(self, state=States.CREATE):
         super().__init__()
-
-        
 
         # Aici sunt variabile de stare ale interfetei
         # Prima este un dictionar cu string-uri ce are ca scop afisarea de indicii
@@ -23,6 +20,8 @@ class GUI(tk.Tk):
             "Query" : "Query mode: Click on a node to query it\'s probability"
         }
 
+        # Dictionar de noduri cu referinte
+        self.node_dict = {}
         # Pozitiile mouse-ului pe x si pe y in canvas
         self.mouse_x = None
         self.mouse_y = None
@@ -168,10 +167,12 @@ class GUI(tk.Tk):
             exit_button = tk.Button(pop_up, text="OK", command=lambda: self.write_text_on_node(value_from_text_box.get(), pop_up))
             exit_button.grid(row=1, sticky=tk.S)
 
-            self.create_states = CreateStates.FREE
+        self.create_states = CreateStates.FREE
+        self.hint_textVariable.set("")
 
     def write_text_on_node(self, text, pop_up):
         self.canvas.create_text(self.mouse_x, self.mouse_y, text=text)
+        self.node_dict[text] = Node(text, Coord(self.mouse_x, self.mouse_y))
         pop_up.destroy()
 
 
@@ -196,7 +197,17 @@ class GUI(tk.Tk):
         '''
         tk.Button(self.actions_frame, text="Create", command=self.create_node).pack(pady=5, padx=10, side=tk.LEFT, anchor=tk.NW)
         tk.Button(self.actions_frame, text="Select").pack(pady=5, padx=10, side=tk.LEFT, anchor=tk.NW)
+        tk.Button(self.actions_frame, text="Create Arc", command=self.create_arc).pack(pady=5, padx=10, side=tk.LEFT, anchor=tk.NW)
         # Trebuie adaugate alte butoane
+
+    def create_arc(self):
+        if len(self.node_dict) < 2:
+            msg.showwarning("Attention", "There are not enough nodes to create an arc between them")
+            return
+
+        self.hint_textVariable.set("Click on a node, then on another node to create a connection between them\n"
+                                   "The first node is going to be a parent for the second node")
+
 
     def create_node(self):
         self.hint_textVariable.set("Click on the canvas below to create a node")
