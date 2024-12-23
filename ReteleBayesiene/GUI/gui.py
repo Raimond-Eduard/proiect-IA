@@ -1,13 +1,17 @@
 import tkinter as tk
 
+from sympy.functions.combinatorial.numbers import stirling
 
 from Enums.states import States, CreateStates, SolveStates
 from GUI.file_actions import FileActions as fa
 from GUI.gui_helper_functions import Helper
+from Classes.Node import Node
 
 class GUI(tk.Tk):
     def __init__(self, state=States.CREATE):
         super().__init__()
+
+        
 
         # Aici sunt variabile de stare ale interfetei
         # Prima este un dictionar cu string-uri ce are ca scop afisarea de indicii
@@ -151,7 +155,25 @@ class GUI(tk.Tk):
         self.mouse_y = event.y
         if self.state == States.CREATE and self.create_states == CreateStates.CREATE:
             self.canvas.create_oval(self.mouse_x - 30, self.mouse_y - 30, self.mouse_x + 30, self.mouse_y + 30)
+            pop_up = tk.Toplevel(self)
+            pop_up.title("Choose a name for the node")
+            label = tk.Label(pop_up, text="Name: ")
+            value_from_text_box = tk.StringVar(pop_up)
+
+            input_box = tk.Entry(pop_up, textvariable=value_from_text_box)
+
+            label.grid(row=0, column=0, sticky=tk.W, pady=2)
+            input_box.grid(row=0, column=1, sticky=tk.W, pady=2)
+
+            exit_button = tk.Button(pop_up, text="OK", command=lambda: self.write_text_on_node(value_from_text_box.get(), pop_up))
+            exit_button.grid(row=1, sticky=tk.S)
+
             self.create_states = CreateStates.FREE
+
+    def write_text_on_node(self, text, pop_up):
+        self.canvas.create_text(self.mouse_x, self.mouse_y, text=text)
+        pop_up.destroy()
+
 
     def open_custom_sample(self):
         top = tk.Toplevel(self)
