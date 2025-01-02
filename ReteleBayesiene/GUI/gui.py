@@ -1,10 +1,12 @@
 import tkinter as tk
+from logging import setLogRecordFactory
 from tkinter import messagebox as msg
 
 from Enums.states import States, CreateStates, SolveStates
 from GUI.file_actions import FileActions as fa
 from GUI.gui_helper_functions import Helper
 from Classes.Node import Node, Coord
+from Classes.Line import Line
 
 class GUI(tk.Tk):
     def __init__(self, state=States.CREATE):
@@ -22,9 +24,18 @@ class GUI(tk.Tk):
 
         # Dictionar de noduri cu referinte
         self.node_dict = {}
+
+        # Array-uri/dictionare de forme, texte si linii pentru stergerea utlerioara
+        self.shapes = {}
+        self.texts = {}
+        self.lines = []
+
         # Pozitiile mouse-ului pe x si pe y in canvas
         self.mouse_x = None
         self.mouse_y = None
+
+        # Array cu nodurile pentru legarea a 2 noduri
+        self.connection = []
 
         # Initializare state machine
         self.state = States.CREATE
@@ -153,26 +164,65 @@ class GUI(tk.Tk):
         self.mouse_x = event.x
         self.mouse_y = event.y
         if self.state == States.CREATE and self.create_states == CreateStates.CREATE:
-            self.canvas.create_oval(self.mouse_x - 30, self.mouse_y - 30, self.mouse_x + 30, self.mouse_y + 30)
-            pop_up = tk.Toplevel(self)
-            pop_up.title("Choose a name for the node")
-            label = tk.Label(pop_up, text="Name: ")
-            value_from_text_box = tk.StringVar(pop_up)
+            self.draw_node()
 
-            input_box = tk.Entry(pop_up, textvariable=value_from_text_box)
+        if self.state == States.CREATE and self.create_states == CreateStates.ARC:
+            self.draw_line()
 
-            label.grid(row=0, column=0, sticky=tk.W, pady=2)
-            input_box.grid(row=0, column=1, sticky=tk.W, pady=2)
+            if len(self.connection) < 2:
+                return
 
-            exit_button = tk.Button(pop_up, text="OK", command=lambda: self.write_text_on_node(value_from_text_box.get(), pop_up))
-            exit_button.grid(row=1, sticky=tk.S)
+            else:
+                self.connection = []
+        if self.state == States.CREATE and self.create_states == CreateStates.DELETE:
+            self.erase_object()
 
         self.create_states = CreateStates.FREE
         self.hint_textVariable.set("")
 
-    def write_text_on_node(self, text, pop_up):
-        self.canvas.create_text(self.mouse_x, self.mouse_y, text=text)
+    def erase_object(self):
+
+        coord = Coord(self.mouse_x, self.mouse_y)
+        for i in list(self.node_dict.keys()):
+            if self.node_dict[i].is_crossing_coords(coord):
+
+                self.canvas.delete(self.shapes[i])
+                self.canvas.delete(self.texts[i])
+                specific_line = None
+                for line in self.lines:
+                    if self.node_dict[i].label == line.start_node.label or self.node_dict[i] == line.end_node.label:
+                        self.canvas.delete(line.line)
+                        specific_line = line
+
+                if specific_line is not None:
+                    self.lines.remove(specific_line)
+
+                del self.node_dict[i]
+                del self.texts[i]
+                del self.shapes[i]
+
+
+    def draw_node(self):
+        shape = self.canvas.create_oval(self.mouse_x - 30, self.mouse_y - 30, self.mouse_x + 30, self.mouse_y + 30)
+        pop_up = tk.Toplevel(self)
+        pop_up.focus_set()
+        pop_up.title("Choose a name for the node")
+        label = tk.Label(pop_up, text="Name: ")
+        value_from_text_box = tk.StringVar(pop_up)
+
+        input_box = tk.Entry(pop_up, textvariable=value_from_text_box)
+
+        label.grid(row=0, column=0, sticky=tk.W, pady=2)
+        input_box.grid(row=0, column=1, sticky=tk.W, pady=2)
+        exit_button = tk.Button(pop_up, text="OK",
+                                command=lambda: self.write_text_on_node(value_from_text_box.get(), pop_up, shape))
+        exit_button.grid(row=1, sticky=tk.S)
+
+    def write_text_on_node(self, text, pop_up, shape):
+        text_bound = self.canvas.create_text(self.mouse_x, self.mouse_y, text=text)
         self.node_dict[text] = Node(text, Coord(self.mouse_x, self.mouse_y))
+        self.shapes[text] = shape
+        self.texts[text] = text_bound
         pop_up.destroy()
 
 
@@ -196,17 +246,50 @@ class GUI(tk.Tk):
         :return: void
         '''
         tk.Button(self.actions_frame, text="Create", command=self.create_node).pack(pady=5, padx=10, side=tk.LEFT, anchor=tk.NW)
-        tk.Button(self.actions_frame, text="Select").pack(pady=5, padx=10, side=tk.LEFT, anchor=tk.NW)
         tk.Button(self.actions_frame, text="Create Arc", command=self.create_arc).pack(pady=5, padx=10, side=tk.LEFT, anchor=tk.NW)
+        tk.Button(self.actions_frame, text="Delete", command=self.delete_object).pack(pady=5, padx=10, side=tk.LEFT, anchor=tk.NW)
         # Trebuie adaugate alte butoane
 
+    def delete_object(self):
+
+        self.create_states = CreateStates.DELETE
+        if len(self.node_dict) == 0:
+            msg.showwarning("Attention", "You have nothing drawn in order for you to delete...")
+            return
+
+        self.hint_textVariable.set("Click on an existing node to delete it with it and it\'s properties")
+
     def create_arc(self):
+
+        self.create_states = CreateStates.ARC
+
         if len(self.node_dict) < 2:
             msg.showwarning("Attention", "There are not enough nodes to create an arc between them")
             return
 
         self.hint_textVariable.set("Click on a node, then on another node to create a connection between them\n"
                                    "The first node is going to be a parent for the second node")
+
+    def draw_line(self):
+        coord = Coord(self.mouse_x, self.mouse_y)
+        for i in self.node_dict.keys():
+            if self.node_dict[i].is_crossing_coords(coord):
+                if not self.connection:
+                    self.node_dict[i].define_as_parent()
+                self.connection.append(self.node_dict[i])
+
+        if len(self.connection) == 2:
+            parent_tag = self.connection[0].label
+            child_tag = self.connection[1].label
+
+            self.node_dict[child_tag].set_parents(parent_tag)
+
+            position_1 = self.connection[0].coordinates
+            position_2 = self.connection[1].coordinates
+
+            line = self.canvas.create_line(position_1.x, position_1.y, position_2.x, position_2.y)
+            self.lines.append(Line(line, self.node_dict[parent_tag], self.node_dict[child_tag]))
+
 
 
     def create_node(self):

@@ -12,7 +12,8 @@ class States(StateManager):
 class CreateStates(StateManager):
     FREE = 0
     CREATE = 1
-    SELECT = 2
+    ARC = 2
+    DELETE = 3
 
 
 class SolveStates(StateManager):
