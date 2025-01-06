@@ -225,6 +225,49 @@ class GUI(tk.Tk):
         self.texts[text] = text_bound
         pop_up.destroy()
 
+    def draw_network_after_loading_from_file(self):
+
+        for i in self.node_dict.keys():
+
+            x = self.node_dict[i].coordinates.x
+            y = self.node_dict[i].coordinates.y
+            self.shapes[i] = self.canvas.create_oval(x - 30, y - 30, x + 30, y + 30)
+
+            label = self.node_dict[i].label
+            self.texts[i] = self.canvas.create_text(x, y, text=label)
+
+            if self.node_dict[i].parents is not None:
+
+                parents = self.node_dict[i].parents
+
+                for parent in parents:
+                    line = self.canvas.create_line(self.node_dict[parent].coordinates.x, self.node_dict[parent].coordinates.y,
+                                                   self.node_dict[i].coordinates.x, self.node_dict[i].coordinates.y, arrow=tk.LAST)
+                    self.lines.append(Line(line, self.node_dict[parent], self.node_dict[i]))
+
+
+    def draw_line(self):
+        coord = Coord(self.mouse_x, self.mouse_y)
+        for i in self.node_dict.keys():
+            if self.node_dict[i].is_crossing_coords(coord):
+                if not self.connection:
+                    self.node_dict[i].define_as_parent()
+                self.connection.append(self.node_dict[i])
+
+        if len(self.connection) == 2:
+            parent_tag = self.connection[0].label
+            child_tag = self.connection[1].label
+
+            self.node_dict[child_tag].set_parents(parent_tag)
+
+            position_1 = self.connection[0].coordinates
+            position_2 = self.connection[1].coordinates
+
+            line = self.canvas.create_line(position_1.x, position_1.y, position_2.x, position_2.y, arrow=tk.END)
+            self.lines.append(Line(line, self.node_dict[parent_tag], self.node_dict[child_tag]))
+
+
+
 
     def open_custom_sample(self):
         top = tk.Toplevel(self)
@@ -272,7 +315,8 @@ class GUI(tk.Tk):
                 for outcome, probability in probabilities.items():
                     final_prob_dict[label][outcome] = probability
             self.node_dict[i].set_probabilities(final_prob_dict)
-        print(self.node_dict)
+        self.draw_network_after_loading_from_file()
+
 
 
     def set_create_frame(self):
@@ -305,27 +349,6 @@ class GUI(tk.Tk):
 
         self.hint_textVariable.set("Click on a node, then on another node to create a connection between them\n"
                                    "The first node is going to be a parent for the second node")
-
-    def draw_line(self):
-        coord = Coord(self.mouse_x, self.mouse_y)
-        for i in self.node_dict.keys():
-            if self.node_dict[i].is_crossing_coords(coord):
-                if not self.connection:
-                    self.node_dict[i].define_as_parent()
-                self.connection.append(self.node_dict[i])
-
-        if len(self.connection) == 2:
-            parent_tag = self.connection[0].label
-            child_tag = self.connection[1].label
-
-            self.node_dict[child_tag].set_parents(parent_tag)
-
-            position_1 = self.connection[0].coordinates
-            position_2 = self.connection[1].coordinates
-
-            line = self.canvas.create_line(position_1.x, position_1.y, position_2.x, position_2.y)
-            self.lines.append(Line(line, self.node_dict[parent_tag], self.node_dict[child_tag]))
-
 
 
     def create_node(self):
