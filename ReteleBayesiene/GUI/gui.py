@@ -54,14 +54,10 @@ class GUI(tk.Tk):
         # Butonul file + comenzi
         self.file_menu.add_command(
             label="New Graph",
-            accelerator="Ctrl+N",
-            command=fa.create_new_graph,
+            command=self.create_new_graph,
             compound=tk.LEFT
         )
 
-        # Comenzi de pe butonul file
-        self.bind("<Control-n>", fa.create_new_graph)
-        self.bind("<Control-N>", fa.create_new_graph)
 
         # Speram sa avem timp sa implementam si asta
         self.file_menu.add_command(
@@ -159,6 +155,14 @@ class GUI(tk.Tk):
 
         # Linie de testat canvas, va fi stearsa mai tarziu
         # self.line = self.canvas.create_line(20, 50, 1900, 800, fill="red")
+    def create_new_graph(self):
+
+        self.canvas.delete("all")
+        self.state = States.CREATE
+        self.shapes = {}
+        self.texts = {}
+        self.lines = []
+
 
     def get_mouse_coords(self, event):
         self.mouse_x = event.x
