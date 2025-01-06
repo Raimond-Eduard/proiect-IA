@@ -1,5 +1,7 @@
+from IO.json_parser import Parser
+
 class Helper:
     @staticmethod
-    def get_selected_value(list_selection):
-        for i in list_selection.curselection():
-            print(list_selection.get(i))
+    def return_parsed_json(file):
+        parsed_file = Parser.load_retea_from_json(file)
+        return parsed_file

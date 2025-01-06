@@ -2,7 +2,7 @@ import tkinter as tk
 from logging import setLogRecordFactory
 from tkinter import messagebox as msg
 
-from Enums.states import States, CreateStates, SolveStates
+from Enums.states import States, CreateStates, SolveStates, CustomGraphs
 from GUI.file_actions import FileActions as fa
 from GUI.gui_helper_functions import Helper
 from Classes.Node import Node, Coord
@@ -235,9 +235,45 @@ class GUI(tk.Tk):
 
         listbox.insert(1, "Problema Febrei")
 
-        btn = tk.Button(top, text='Load Selection', command=lambda: Helper.get_selected_value(listbox))
+        btn = tk.Button(top, text='Load Selection', command=lambda: self.load_selected_graphs(listbox, top))
         btn.pack(side='bottom')
         listbox.pack()
+
+    def load_selected_graphs(self, listbox, pop_up):
+
+        file = {}
+
+        for i in listbox.curselection():
+            if i == CustomGraphs.FEVER_PROBLEM.value:
+                file = Helper.return_parsed_json("../defaults/Problema_Febrei.json")
+            # Aici vor mai aparea retele, teoretic aici ar fi un switch dar in python nu avem switch
+
+        pop_up.destroy()
+        print(file)
+
+        self.create_network_after_loading_from_file(file)
+
+    def create_network_after_loading_from_file(self, json_dictionary):
+        for i in json_dictionary.keys():
+            x = json_dictionary[i]['position']['x']
+            y = json_dictionary[i]['position']['y']
+            self.node_dict[i] = Node(i, Coord(x, y))
+            parents = json_dictionary[i]['parents']
+            if parents is not None:
+                for j in parents:
+                    self.node_dict[i].set_parents(j)
+            probability_dict = json_dictionary[i]['prob']
+            final_prob_dict = {}
+
+            for label, probabilities in probability_dict.items():
+                label = ', '.join(label) if label else 'None'
+                final_prob_dict[label] = {}
+
+                for outcome, probability in probabilities.items():
+                    final_prob_dict[label][outcome] = probability
+            self.node_dict[i].set_probabilities(final_prob_dict)
+        print(self.node_dict)
+
 
     def set_create_frame(self):
         '''

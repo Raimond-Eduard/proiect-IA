@@ -20,3 +20,6 @@ class SolveStates(StateManager):
     FREE = 0
     MAKE_OBSERVATION = 1
     QUERY = 2
+
+class CustomGraphs(StateManager):
+    FEVER_PROBLEM = 0

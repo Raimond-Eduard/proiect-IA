@@ -6,6 +6,13 @@ class Coord:
     def __eq__(self, other):
         return self.x == other.x and self.y == other.y
 
+    def __str__(self):
+        return f"X: {self.x}, Y: {self.y}"
+
+    def __repr__(self):
+        return f"X: {self.x}, Y: {self.y}"
+
+
 class Node:
     def __init__(self, label, positions):
         self.label = label
@@ -14,6 +21,12 @@ class Node:
         self.coordinates = positions
         self.is_parent = None
         self.output = None
+
+    def __str__(self):
+        return f"Label: {self.label}, Probabilities: {self.probabilities_dict}, Parents: {self.parents}, coordinates: {self.coordinates}"
+
+    def __repr__(self):
+        return f"Label: {self.label}, Probabilities: {self.probabilities_dict}, Parents: {self.parents}, coordinates: {self.coordinates}"
 
     def set_probabilities(self, probabilities_dict):
 
