@@ -181,8 +181,103 @@ class GUI(tk.Tk):
         if self.state == States.CREATE and self.create_states == CreateStates.DELETE:
             self.erase_object()
 
+        if self.state == States.CREATE and self.create_states == CreateStates.MODIFY_TABLE:
+            self.generate_table()
+
         self.create_states = CreateStates.FREE
         self.hint_textVariable.set("")
+
+    def generate_table(self):
+
+        coord = Coord(self.mouse_x, self.mouse_y)
+        selected_node = None
+
+        for i in list(self.node_dict.keys()):
+
+            if self.node_dict[i].is_crossing_coords(coord):
+                selected_node = self.node_dict[i]
+
+        if selected_node is None:
+            return
+
+        top = tk.Toplevel(self)
+        top.title("Modify probability table")
+
+        labels = []
+        inputs = []
+        x = 0
+
+        text = selected_node.label
+        labels.append(tk.Label(top, text=text).grid(row=0, column=1))
+        parents_label_string = ""
+
+        if selected_node.parents is not None:
+            for i in selected_node.parents:
+                parents_label_string += i + " "
+
+        row = 1
+        labels.append(tk.Label(top, text=parents_label_string).grid(row=row, column=0))
+        column = 2
+        values = []
+        position = 0
+        if 'None' in selected_node.probabilities_dict.keys():
+
+            for i in selected_node.probabilities_dict['None'].keys():
+
+                value = selected_node.probabilities_dict['None'][i]
+                values.append(tk.StringVar())
+                inputs.append(tk.Entry(top, textvariable=values[position]).grid(row=row + 1, column=column))
+                values[position].set(str(value))
+                position += 1
+                column += 1
+        else:
+            for i in selected_node.probabilities_dict.keys():
+
+                row += 1
+                labels.append(tk.Label(top, text=i).grid(row=row, column=0))
+                value = selected_node.probabilities_dict[i]['Da']
+                values.append(tk.StringVar())
+                inputs.append(tk.Entry(top, textvariable=values[position]).grid(row=row, column=2))
+                values[position].set(str(value))
+                value = selected_node.probabilities_dict[i]['Nu']
+                values.append(tk.StringVar())
+                values[position + 1].set(str(value))
+                inputs.append(tk.Entry(top, textvariable=values[position + 1]).grid(row=row, column=3, padx=5, pady=5))
+                position += 2
+
+        labels.append(tk.Label(top, text="Da").grid(row=1, column=2))
+        labels.append(tk.Label(top, text="Nu").grid(row=1, column=3))
+
+        button = tk.Button(top, text="Ok", command=lambda: self.set_modified_values(values, selected_node, top))
+        cancel = tk.Button(top, text="Cancel", command=top.destroy)
+        button.grid(row=row + 2, column=1, pady=10)
+        cancel.grid(row=row + 2, column=2, pady=10)
+
+    def set_modified_values(self, modified_values, selected_node, top):
+
+        setter = []
+        for i in modified_values:
+            setter.append(float(i.get()))
+
+        for i in range(0, len(setter), 2):
+            if setter[i] + setter[i + 1] != 1:
+                msg.showwarning("Attention", "There is one probability on these rows that is not adding up to 100%.\nCheck and retry.")
+                return
+
+        if 'None' in selected_node.probabilities_dict.keys():
+            selected_node.probabilities_dict['None']['Da'] = setter[0]
+            selected_node.probabilities_dict['None']['Nu'] = setter[1]
+        else:
+
+            index = 0
+
+            for i in selected_node.probabilities_dict.keys():
+                selected_node.probabilities_dict[i]['Da'] = setter[index]
+                selected_node.probabilities_dict[i]['Nu'] = setter[index + 1]
+                index += 2
+        self.node_dict[selected_node.label].set_probabilities(selected_node.probabilities_dict)
+        top.destroy()
+
 
     def erase_object(self):
 
@@ -225,8 +320,11 @@ class GUI(tk.Tk):
     def write_text_on_node(self, text, pop_up, shape):
         text_bound = self.canvas.create_text(self.mouse_x, self.mouse_y, text=text)
         self.node_dict[text] = Node(text, Coord(self.mouse_x, self.mouse_y))
+        default_probability = {'None': {'Da': 0.5, 'Nu': 0.5}}
+        self.node_dict[text].set_probabilities(default_probability)
         self.shapes[text] = shape
         self.texts[text] = text_bound
+
         pop_up.destroy()
 
     def draw_network_after_loading_from_file(self):
@@ -263,15 +361,28 @@ class GUI(tk.Tk):
             child_tag = self.connection[1].label
 
             self.node_dict[child_tag].set_parents(parent_tag)
+            new_dict = {}
+            tup = ('Da', 'Nu')
+            if 'None' in self.node_dict[child_tag].probabilities_dict.keys():
+
+                for i in tup:
+                    new_dict[i] = {'Da': 0.5, 'Nu': 0.5}
+
+                self.node_dict[child_tag].set_probabilities(new_dict)
+            else:
+                new_dict = {}
+                for prob in self.node_dict[child_tag].probabilities_dict.keys():
+                    for i in tup:
+                        new_label = prob.join(', ' + i)
+                        new_dict[new_label] = {'Da': 0.5, 'Nu': 0.5}
+
+                self.node_dict[child_tag].set_probabilities(new_dict)
 
             position_1 = self.connection[0].coordinates
             position_2 = self.connection[1].coordinates
 
-            line = self.canvas.create_line(position_1.x, position_1.y, position_2.x, position_2.y, arrow=tk.END)
+            line = self.canvas.create_line(position_1.x, position_1.y, position_2.x, position_2.y, arrow=tk.LAST)
             self.lines.append(Line(line, self.node_dict[parent_tag], self.node_dict[child_tag]))
-
-
-
 
     def open_custom_sample(self):
         top = tk.Toplevel(self)
@@ -296,7 +407,6 @@ class GUI(tk.Tk):
             # Aici vor mai aparea retele, teoretic aici ar fi un switch dar in python nu avem switch
 
         pop_up.destroy()
-        print(file)
 
         self.create_network_after_loading_from_file(file)
 
@@ -319,8 +429,8 @@ class GUI(tk.Tk):
                 for outcome, probability in probabilities.items():
                     final_prob_dict[label][outcome] = probability
             self.node_dict[i].set_probabilities(final_prob_dict)
+            print(self.node_dict[i])
         self.draw_network_after_loading_from_file()
-
 
 
     def set_create_frame(self):
@@ -332,7 +442,18 @@ class GUI(tk.Tk):
         tk.Button(self.actions_frame, text="Create", command=self.create_node).pack(pady=5, padx=10, side=tk.LEFT, anchor=tk.NW)
         tk.Button(self.actions_frame, text="Create Arc", command=self.create_arc).pack(pady=5, padx=10, side=tk.LEFT, anchor=tk.NW)
         tk.Button(self.actions_frame, text="Delete", command=self.delete_object).pack(pady=5, padx=10, side=tk.LEFT, anchor=tk.NW)
+        tk.Button(self.actions_frame, text="Modify probability table", command=self.modify_probability_table).pack(pady=5, padx=10, side=tk.LEFT, anchor=tk.NW)
         # Trebuie adaugate alte butoane
+
+    def modify_probability_table(self):
+
+        self.create_states = CreateStates.MODIFY_TABLE
+
+        if len(self.node_dict) == 0:
+            msg.showwarning("Attention", "Insert nodes first")
+            return
+
+        self.hint_textVariable.set("Click on an existing node to modify it\'s probability table")
 
     def delete_object(self):
 

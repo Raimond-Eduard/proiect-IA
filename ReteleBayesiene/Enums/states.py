@@ -14,6 +14,7 @@ class CreateStates(StateManager):
     CREATE = 1
     ARC = 2
     DELETE = 3
+    MODIFY_TABLE = 4
 
 
 class SolveStates(StateManager):
