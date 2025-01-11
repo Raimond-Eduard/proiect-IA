@@ -25,6 +25,9 @@ class GUI(tk.Tk):
         # Dictionar de noduri cu referinte
         self.node_dict = {}
 
+        # Dictionar cu nodurile si valorile observate
+        self.evidence = {}
+
         # Array-uri/dictionare de forme, texte si linii pentru stergerea utlerioara
         self.shapes = {}
         self.texts = {}
@@ -184,8 +187,68 @@ class GUI(tk.Tk):
         if self.state == States.CREATE and self.create_states == CreateStates.MODIFY_TABLE:
             self.generate_table()
 
+        if self.state == States.SOLVE and self.solve_states == SolveStates.MAKE_OBSERVATION:
+            self.set_output_value_for_clicked_node()
+
         self.create_states = CreateStates.FREE
+        self.solve_states = SolveStates.FREE
         self.hint_textVariable.set("")
+
+    def set_output_value_for_clicked_node(self):
+
+        selected_node = None
+        coords = Coord(self.mouse_x, self.mouse_y)
+        for i in self.node_dict.keys():
+            if self.node_dict[i].is_crossing_coords(coords):
+                selected_node =self.node_dict[i]
+                break
+        if selected_node is None:
+            return
+
+        top = tk.Toplevel(self)
+        top.title("Observation")
+        label = tk.Label(top, text="Set the observed value")
+        label.pack()
+
+        listbox = tk.Listbox(top, selectmode=tk.SINGLE)
+        listbox.insert(0, "Da")
+        listbox.insert(1, "Nu")
+        listbox.insert(2, "None")
+
+        listbox.pack()
+
+        btn_1 = tk.Button(top, text="Ok", command=lambda: self.set_observation(listbox, selected_node, top))
+        btn_2 = tk.Button(top, text="Cancel", command=top.destroy)
+
+        btn_1.pack()
+        btn_2.pack()
+
+    def set_observation(self, listbox, selected_node, top):
+
+        if listbox.curselection() is None:
+            msg.showwarning("Warning", "You have to select a value before confirming")
+            return
+
+        prev_text = "".join(selected_node.label)
+        print(listbox.curselection())
+        if 0 in listbox.curselection():
+
+            prev_text = "".join([prev_text, "\nDa"])
+            self.evidence[selected_node.label] = 'Da'
+
+        elif 1 in listbox.curselection():
+
+            prev_text = "".join([prev_text, "\nNu"])
+            self.evidence[selected_node.label] = 'Nu'
+
+        elif 2 in listbox.curselection():
+
+            if self.evidence[selected_node.label]:
+                del self.evidence[selected_node.label]
+
+        self.canvas.itemconfig(self.texts[selected_node.label], text=prev_text)
+        top.destroy()
+
 
     def generate_table(self):
 
@@ -196,6 +259,7 @@ class GUI(tk.Tk):
 
             if self.node_dict[i].is_crossing_coords(coord):
                 selected_node = self.node_dict[i]
+                break
 
         if selected_node is None:
             return
@@ -487,8 +551,17 @@ class GUI(tk.Tk):
         la state-ul de tip solve
         :return: void
         '''
-        tk.Button(self.actions_frame, text="Make Observation").pack(pady=5, padx=10, side=tk.LEFT, anchor=tk.NW)
+        tk.Button(self.actions_frame, text="Make Observation", command=self.make_observation).pack(pady=5, padx=10, side=tk.LEFT, anchor=tk.NW)
         tk.Button(self.actions_frame, text="Query").pack(pady=5, padx=10, side=tk.LEFT, anchor=tk.NW)
+
+    def make_observation(self):
+
+        if len(self.node_dict) == 0:
+            msg.showwarning("Attention", "Insert nodes first")
+            return
+
+        self.solve_states = SolveStates.MAKE_OBSERVATION
+        self.hint_textVariable.set("Click on an existing node to specify it's output value")
 
 
 
