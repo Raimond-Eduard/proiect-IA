@@ -1,0 +1,91 @@
+{
+  "Locatia": {
+    "parents": [],
+    "prob": {
+      "()": {
+        "Da": 0.3,
+        "Nu": 0.7
+      }
+    },
+    "position": {
+      "x": 150,
+      "y": 100
+    }
+  },
+  "SumaMare": {
+    "parents": [],
+    "prob": {
+      "()": {
+        "Da": 0.4,
+        "Nu": 0.6
+      }
+    },
+    "position": {
+      "x": 350,
+      "y": 100
+    }
+  },
+  "CardActivat": {
+    "parents": [],
+    "prob": {
+      "()": {
+        "Da": 0.9,
+        "Nu": 0.1
+      }
+    },
+    "position": {
+      "x": 550,
+      "y": 100
+    }
+  },
+  "AlertaFrauda": {
+    "parents": [ "Locatia", "SumaMare" ],
+    "prob": {
+      "('Da','Da')": {
+        "Da": 0.8,
+        "Nu": 0.2
+      },
+      "('Da','Nu')": {
+        "Da": 0.5,
+        "Nu": 0.5
+      },
+      "('Nu','Da')": {
+        "Da": 0.4,
+        "Nu": 0.6
+      },
+      "('Nu','Nu')": {
+        "Da": 0.1,
+        "Nu": 0.9
+      }
+    },
+    "position": {
+      "x": 300,
+      "y": 250
+    }
+  },
+  "CardFurat": {
+    "parents": [ "CardActivat", "AlertaFrauda" ],
+    "prob": {
+      "('Da','Da')": {
+        "Da": 0.7,
+        "Nu": 0.3
+      },
+      "('Da','Nu')": {
+        "Da": 0.1,
+        "Nu": 0.9
+      },
+      "('Nu','Da')": {
+        "Da": 0.5,
+        "Nu": 0.5
+      },
+      "('Nu','Nu')": {
+        "Da": 0.0,
+        "Nu": 1.0
+      }
+    },
+    "position": {
+      "x": 350,
+      "y": 400
+    }
+  }
+}

@@ -1,0 +1,108 @@
+{
+  "Buget": {
+    "parents": [],
+    "prob": {
+      "()": {
+        "Da": 0.4,
+        "Nu": 0.6
+      }
+    },
+    "position": {
+      "x": 150,
+      "y": 100
+    }
+  },
+  "Locuinta": {
+    "parents": [],
+    "prob": {
+      "()": {
+        "Da": 0.6,
+        "Nu": 0.4
+      }
+    },
+    "position": {
+      "x": 350,
+      "y": 100
+    }
+  },
+  "Copii": {
+    "parents": [ "Buget", "Locuinta" ],
+    "prob": {
+      "('Da','Da')": {
+        "Da": 0.7,
+        "Nu": 0.3
+      },
+      "('Da','Nu')": {
+        "Da": 0.5,
+        "Nu": 0.5
+      },
+      "('Nu','Da')": {
+        "Da": 0.3,
+        "Nu": 0.7
+      },
+      "('Nu','Nu')": {
+        "Da": 0.1,
+        "Nu": 0.9
+      }
+    },
+    "position": {
+      "x": 250,
+      "y": 250
+    }
+  },
+  "Salariu": {
+    "parents": [],
+    "prob": {
+      "()": {
+        "Da": 0.7,
+        "Nu": 0.3
+      }
+    },
+    "position": {
+      "x": 450,
+      "y": 100
+    }
+  },
+  "Economii": {
+    "parents": [ "Copii", "Salariu" ],
+    "prob": {
+      "('Da','Da')": {
+        "Da": 0.3,
+        "Nu": 0.7
+      },
+      "('Da','Nu')": {
+        "Da": 0.1,
+        "Nu": 0.9
+      },
+      "('Nu','Da')": {
+        "Da": 0.6,
+        "Nu": 0.4
+      },
+      "('Nu','Nu')": {
+        "Da": 0.3,
+        "Nu": 0.7
+      }
+    },
+    "position": {
+      "x": 300,
+      "y": 400
+    }
+  },
+  "Vacante": {
+    "parents": [ "Economii" ],
+    "prob": {
+      "('Da',)": {
+        "Da": 0.8,
+        "Nu": 0.2
+      },
+      "('Nu',)": {
+        "Da": 0.1,
+        "Nu": 0.9
+      }
+    },
+    "position": {
+      "x": 300,
+      "y": 550
+    }
+  }
+}

@@ -1,0 +1,87 @@
+{
+  "Reclamatii": {
+    "parents": [],
+    "prob": {
+      "()": {
+        "Da": 0.2,
+        "Nu": 0.8
+      }
+    },
+    "position": {
+      "x": 150,
+      "y": 100
+    }
+  },
+  "StocSuficient": {
+    "parents": [],
+    "prob": {
+      "()": {
+        "Da": 0.7,
+        "Nu": 0.3
+      }
+    },
+    "position": {
+      "x": 350,
+      "y": 100
+    }
+  },
+  "LivrareLaTimp": {
+    "parents": [ "StocSuficient" ],
+    "prob": {
+      "('Da',)": {
+        "Da": 0.9,
+        "Nu": 0.1
+      },
+      "('Nu',)": {
+        "Da": 0.2,
+        "Nu": 0.8
+      }
+    },
+    "position": {
+      "x": 250,
+      "y": 250
+    }
+  },
+  "ReturProdus": {
+    "parents": [ "Reclamatii" ],
+    "prob": {
+      "('Da',)": {
+        "Da": 0.6,
+        "Nu": 0.4
+      },
+      "('Nu',)": {
+        "Da": 0.1,
+        "Nu": 0.9
+      }
+    },
+    "position": {
+      "x": 100,
+      "y": 350
+    }
+  },
+  "RatingPozitiv": {
+    "parents": [ "LivrareLaTimp", "ReturProdus" ],
+    "prob": {
+      "('Da','Da')": {
+        "Da": 0.4,
+        "Nu": 0.6
+      },
+      "('Da','Nu')": {
+        "Da": 0.9,
+        "Nu": 0.1
+      },
+      "('Nu','Da')": {
+        "Da": 0.2,
+        "Nu": 0.8
+      },
+      "('Nu','Nu')": {
+        "Da": 0.3,
+        "Nu": 0.7
+      }
+    },
+    "position": {
+      "x": 250,
+      "y": 450
+    }
+  }
+}

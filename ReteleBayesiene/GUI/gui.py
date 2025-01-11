@@ -1,9 +1,9 @@
+import os.path
 import tkinter as tk
-from logging import setLogRecordFactory
 from tkinter import messagebox as msg
 
 from Enums.states import States, CreateStates, SolveStates, CustomGraphs
-from GUI.file_actions import FileActions as fa
+from GUI.file_actions import FileActions as FA
 from GUI.gui_helper_functions import Helper
 from Classes.Node import Node, Coord
 from Classes.Line import Line
@@ -14,14 +14,6 @@ class GUI(tk.Tk):
         super().__init__()
 
         # Aici sunt variabile de stare ale interfetei
-        # Prima este un dictionar cu string-uri ce are ca scop afisarea de indicii
-        # in interfata pentru utilizator ca sa inteleaga ce actiune este activa la momentul respectiv
-        self.helper_text = {
-            "Create" : "Create mode: Click on the canvas below to create a node",
-            "Select" : "Select mode: Click on a node to select it and change properties",
-            "Make Observation" : "Make Observation mode: Click on a node to specify if it has a specific value before querying",
-            "Query" : "Query mode: Click on a node to query it\'s probability"
-        }
 
         # Dictionar de noduri cu referinte
         self.node_dict = {}
@@ -41,8 +33,8 @@ class GUI(tk.Tk):
         # Array cu nodurile pentru legarea a 2 noduri
         self.connection = []
 
-        # Initializare state machine
-        self.state = States.CREATE
+        # Initializare state machines
+        self.state = state
         self.create_states = CreateStates.FREE
         self.solve_states = SolveStates.FREE
 
@@ -61,32 +53,26 @@ class GUI(tk.Tk):
             command=self.create_new_graph,
             compound=tk.LEFT
         )
-
-
-        # Speram sa avem timp sa implementam si asta
+        # Incarca dintr-un json un template de retea
         self.file_menu.add_command(
             label="Load Custom Graph",
-            command=self.open_custom_sample, # TO DO - open custom sample
+            command=self.open_custom_sample,
             compound=tk.LEFT
         )
 
-        self.file_menu.add_command(
-            label="Load From File",
-            command=fa.open_file,
-            compound=tk.LEFT
-        )
-
+        # Salvarea retelei intr-un json, nu este implementat
         self.file_menu.add_separator()
         self.file_menu.add_command(
             label="Save",
             accelerator="Ctrl+S",
-            command=fa.save_file,
+            command=FA.save_file,
             compound=tk.LEFT
         )
 
-        self.bind("<Control-s>", fa.save_file)
-        self.bind("<Control-S>", fa.save_file)
+        self.bind("<Control-s>", FA.save_file)
+        self.bind("<Control-S>", FA.save_file)
 
+        # Iesirea din buton de Exit
         self.file_menu.add_command(
             label="Exit",
             command=self.destroy,
@@ -137,6 +123,7 @@ class GUI(tk.Tk):
         self.actions_frame = tk.Frame(self, bg="white", padx=5, pady=5, relief="ridge", borderwidth=2)
         self.actions_frame.pack(fill="both", expand=True, pady=10, side=tk.TOP, anchor=tk.NW)
 
+        # Initial se porneste pe frame-ul de create
         self.set_create_frame()
 
         # Frame-ul in care se va situa canvasul
@@ -157,10 +144,11 @@ class GUI(tk.Tk):
         self.canvas.configure(yscrollcommand=self.scrollbar.set, xscrollcommand=self.h_scrollbar.set)
 
 
-        # Linie de testat canvas, va fi stearsa mai tarziu
-        # self.line = self.canvas.create_line(20, 50, 1900, 800, fill="red")
     def create_new_graph(self):
-
+        """
+        Sterge toate elementele vizuale si logice, mai are bug-uri
+        :return: void
+        """
         self.canvas.delete("all")
         self.state = States.CREATE
         self.shapes = {}
@@ -169,11 +157,21 @@ class GUI(tk.Tk):
 
 
     def get_mouse_coords(self, event):
+        """
+        Functie binded cu click stanga de pe mouse,
+        In functie de state-ul aplicatiei si de substate-ul selectat se apeleaza functii
+        ce au legatura cu click-urile de pe ecran
+        :param event: event se refera la pozitiile mouse-ului din frame-ul de canvas
+        :return:
+        """
         self.mouse_x = event.x
         self.mouse_y = event.y
+
+        # Creare nod
         if self.state == States.CREATE and self.create_states == CreateStates.CREATE:
             self.draw_node()
 
+        # Creare legatura intre 2 noduri
         if self.state == States.CREATE and self.create_states == CreateStates.ARC:
             self.draw_line()
 
@@ -182,23 +180,33 @@ class GUI(tk.Tk):
 
             else:
                 self.connection = []
+
+        # Stergere noduri si legaturi (cand se sterge doar nodul copil ramane sageata pe ecran)
         if self.state == States.CREATE and self.create_states == CreateStates.DELETE:
             self.erase_object()
 
+        # Modificarea tabelei de probabilitati
         if self.state == States.CREATE and self.create_states == CreateStates.MODIFY_TABLE:
             self.generate_table()
 
+        # Setarea unei valori de observare pentru nodul selectat
         if self.state == States.SOLVE and self.solve_states == SolveStates.MAKE_OBSERVATION:
             self.set_output_value_for_clicked_node()
 
+        # Interogarea nodului selectat
         if self.state == States.SOLVE and self.solve_states == SolveStates.QUERY:
             self.display_query_result()
 
+        # Resetarea starilor pentru a evita bug-uri sau erori
         self.create_states = CreateStates.FREE
         self.solve_states = SolveStates.FREE
         self.hint_textVariable.set("")
 
     def display_query_result(self):
+        """
+        Functia ce aplica algoritmul de inferenta prin enumerare in retele bayesiene
+        :return:void
+        """
         coord = Coord(self.mouse_x, self.mouse_y)
         selected_node = None
         for i in self.node_dict.keys():
@@ -239,7 +247,10 @@ class GUI(tk.Tk):
         btn.pack(side=tk.BOTTOM)
 
     def set_output_value_for_clicked_node(self):
-
+        """
+        Functia ce afiseaza un pop-up de unde ne selectam valoarea de iesire pentru nodul ales
+        :return:void
+        """
         selected_node = None
         coords = Coord(self.mouse_x, self.mouse_y)
         for i in self.node_dict.keys():
@@ -268,7 +279,13 @@ class GUI(tk.Tk):
         btn_2.pack()
 
     def set_observation(self, listbox, selected_node, top):
-
+        """
+        Functia ce seteaza valoarea de iesire pentru nodul ales
+        :param listbox: lista cu selectia valorile de iesire
+        :param selected_node: nodul ales pentru a evita verificarile existentei lui la coordonatele x si y
+        :param top: fereastra de pop-up transmisa pentru a inchide la finalizarea logicii
+        :return: void
+        """
         if listbox.curselection() is None:
             msg.showwarning("Warning", "You have to select a value before confirming")
             return
@@ -294,7 +311,11 @@ class GUI(tk.Tk):
 
 
     def generate_table(self):
-
+        """
+        Functia ce trece prin toti parintii nodului selectat si aplica label-uri si valorile de probabilitati
+        in casutele corespunzatoare
+        :return: void
+        """
         coord = Coord(self.mouse_x, self.mouse_y)
         selected_node = None
 
@@ -361,7 +382,13 @@ class GUI(tk.Tk):
         cancel.grid(row=row + 2, column=2, pady=10)
 
     def set_modified_values(self, modified_values, selected_node, top):
-
+        """
+        Aplica modificarile facute la tabela de probabilitati
+        :param modified_values: toate valorile din entrybox-urile de pe pop-up
+        :param selected_node: nodul selectat pe care se vor aplica modifcarile
+        :param top: pop-up-ul care urmeaza sa fie inchis
+        :return:void
+        """
         setter = []
         for i in modified_values:
             setter.append(float(i.get()))
@@ -387,7 +414,10 @@ class GUI(tk.Tk):
 
 
     def erase_object(self):
-
+        """
+        Functia care sterge nodurile selectate si legaturile care sunt intre acestea
+        :return:void
+        """
         coord = Coord(self.mouse_x, self.mouse_y)
         for i in list(self.node_dict.keys()):
             if self.node_dict[i].is_crossing_coords(coord):
@@ -409,6 +439,16 @@ class GUI(tk.Tk):
 
 
     def draw_node(self):
+        """
+        Functia ce deseneaza un nod la coordonatele mouse-ului si deschide un pop-up din care se salveaza denumirea nodului
+        :return:void
+        """
+        coord = Coord(self.mouse_x, self.mouse_y)
+        for i in self.node_dict.keys():
+            if self.node_dict[i].is_crossing_coords(coord):
+                msg.showwarning("Attention", "Don\'t draw a node on anoter node")
+                return
+
         shape = self.canvas.create_oval(self.mouse_x - 30, self.mouse_y - 30, self.mouse_x + 30, self.mouse_y + 30)
         pop_up = tk.Toplevel(self)
         pop_up.focus_set()
@@ -421,12 +461,23 @@ class GUI(tk.Tk):
 
         label.grid(row=0, column=0, sticky=tk.W, pady=2)
         input_box.grid(row=0, column=1, sticky=tk.W, pady=2)
+        if value_from_text_box.get() == "":
+            msg.showwarning("Attention", "Please don\'t enter an empty label.")
+            return
+
         exit_button = tk.Button(pop_up, text="OK",
                                 command=lambda: self.write_text_on_node(value_from_text_box.get(), pop_up, shape))
         pop_up.bind("<Return>", lambda event: self.write_text_on_node(value_from_text_box.get(), pop_up, shape))
         exit_button.grid(row=1, sticky=tk.S)
 
     def write_text_on_node(self, text, pop_up, shape):
+        """
+        Functia responsabila de desenarea textului pe nodurile din canvas
+        :param text: Textul ce va fi scris pe nod
+        :param pop_up: Pop-up-ul care va fi inchis la finalizarea actiunii
+        :param shape: Desenul nodului transmis ca parametru pentru a putea fi salvat.
+        :return: void
+        """
         text_bound = self.canvas.create_text(self.mouse_x, self.mouse_y, text=text)
         self.node_dict[text] = Node(text, Coord(self.mouse_x, self.mouse_y))
         default_probability = {'None': {'Da': 0.5, 'Nu': 0.5}}
@@ -437,7 +488,10 @@ class GUI(tk.Tk):
         pop_up.destroy()
 
     def draw_network_after_loading_from_file(self):
-
+        """
+        Functia responsabila de desenarea retelei pe canvas dupa ce a fost incarcata dintr-un json
+        :return:void
+        """
         for i in self.node_dict.keys():
 
             x = self.node_dict[i].coordinates.x
@@ -458,6 +512,11 @@ class GUI(tk.Tk):
 
 
     def draw_line(self):
+        """
+        Functia ce se ocupa de desenarea unei linii intre 2 noduri
+        self.connection este un array de maxim 2 valori care retine nodurile intre care se va face legatura
+        :return: void
+        """
         coord = Coord(self.mouse_x, self.mouse_y)
         for i in self.node_dict.keys():
             if self.node_dict[i].is_crossing_coords(coord):
@@ -494,6 +553,10 @@ class GUI(tk.Tk):
             self.lines.append(Line(line, self.node_dict[parent_tag], self.node_dict[child_tag]))
 
     def open_custom_sample(self):
+        """
+        Functie ce deschide un meniu de unde se pot alege modele predefinite de retele
+        :return: void
+        """
         top = tk.Toplevel(self)
         top.geometry("720x240")
         top.title("Custom Graph")
@@ -501,25 +564,74 @@ class GUI(tk.Tk):
         listbox = tk.Listbox(top, width=40, height=10, selectmode=tk.SINGLE)
 
         listbox.insert(1, "Problema Febrei")
+        listbox.insert(2, "Problema Automobilului")
+        listbox.insert(3,"Problema Bugetului Familiei")
+        listbox.insert(4, "Problema Cardului furat")
+        listbox.insert(5, "Problema Carierei")
+        listbox.insert(6, "Problema Durerilor in piept")
+        listbox.insert(7, "Problema Fabricii")
+        listbox.insert(8, "Problema Festivalului")
+        listbox.insert(9, "Problema Planificarii Vacantei")
+        listbox.insert(10, "Problema rating-ului unui magainz")
+        listbox.insert(11, "Problema Studentului")
 
         btn = tk.Button(top, text='Load Selection', command=lambda: self.load_selected_graphs(listbox, top))
         btn.pack(side='bottom')
         listbox.pack()
 
     def load_selected_graphs(self, listbox, pop_up):
-
+        """
+        Incarca in memorie valorile din json
+        :param listbox: listbox-ul unde se vor scrie valorile
+        :param pop_up: Pop-up-ul care v afi inchis dupa finalizare
+        :return: void
+        """
         file = {}
 
         for i in listbox.curselection():
-            if i == CustomGraphs.FEVER_PROBLEM.value:
-                file = Helper.return_parsed_json("../defaults/Problema_Febrei.json")
-            # Aici vor mai aparea retele, teoretic aici ar fi un switch dar in python nu avem switch
+            # if i == CustomGraphs.FEVER_PROBLEM.value:
+            #     file = Helper.return_parsed_json("../defaults/Problema_Febrei.json")
+            current = os.path.abspath(__file__)
+            match i:
+                case CustomGraphs.FEVER_PROBLEM.value:
+                    file = Helper.return_parsed_json(os.path.join(current,"../defaults/Problema_Febrei.json"))
 
+                case CustomGraphs.AUTO.value:
+                    file = Helper.return_parsed_json(os.path.join(current,"../defaults/Problema_Automobilului.json"))
+
+                case CustomGraphs.BUGET.value:
+                    file = Helper.return_parsed_json(os.path.join(current,"../defaults/Problema_Buget_Familie.json"))
+
+                case CustomGraphs.CAREER.value:
+                    file = Helper.return_parsed_json(os.path.join(current,"../defaults/Problema_Cariere.json"))
+
+                case CustomGraphs.PAIN.value:
+                    file = Helper.return_parsed_json(os.path.join(current,"../defaults/Problema_Durerilor_In_Piept.json"))
+
+                case CustomGraphs.FACTORY.value:
+                    file = Helper.return_parsed_json(os.path.join(current,"../defaults/Problema_Fabricii.json"))
+
+                case CustomGraphs.FESTIVAL.value:
+                    file = Helper.return_parsed_json(os.path.join(current,"../defaults/Problema_Festivalului.json"))
+
+                case CustomGraphs.HOLIDAY.value:
+                    file = Helper.return_parsed_json(os.path.join(current,"../defaults/Problema_Planificare_Vacanta.json"))
+
+                case CustomGraphs.RATING.value:
+                    file = Helper.return_parsed_json(os.path.join(current,"../defaults/Problema_Rating-ului_Unui_Magazin.json"))
+
+                case CustomGraphs.STUDENT.value:
+                    file = Helper.return_parsed_json(os.path.join(current,"../defaults/Problema_Studentului.json"))
         pop_up.destroy()
 
         self.create_network_after_loading_from_file(file)
 
     def create_network_after_loading_from_file(self, json_dictionary):
+        """
+        Mapeaza toate valorile din json in OOP-ul din memorie
+        :param json_dictionary: dictionarul returnat de incarcarea jsonului
+        :return: void
+        """
         for i in json_dictionary.keys():
             x = json_dictionary[i]['position']['x']
             y = json_dictionary[i]['position']['y']
@@ -542,11 +654,11 @@ class GUI(tk.Tk):
 
 
     def set_create_frame(self):
-        '''
+        """
         Functie care se ocupa de modificarea dinamica a frame-ului
         cu butoane in cazul in care starea este pe create
         :return: void
-        '''
+        """
         tk.Button(self.actions_frame, text="Create", command=self.create_node).pack(pady=5, padx=10, side=tk.LEFT, anchor=tk.NW)
         tk.Button(self.actions_frame, text="Create Arc", command=self.create_arc).pack(pady=5, padx=10, side=tk.LEFT, anchor=tk.NW)
         tk.Button(self.actions_frame, text="Delete", command=self.delete_object).pack(pady=5, padx=10, side=tk.LEFT, anchor=tk.NW)
@@ -554,7 +666,10 @@ class GUI(tk.Tk):
         # Trebuie adaugate alte butoane
 
     def modify_probability_table(self):
-
+        """
+        Functia care seteaza state-ul de modificare a tabelei ce probabilitati
+        :return:
+        """
         self.create_states = CreateStates.MODIFY_TABLE
 
         if len(self.node_dict) == 0:
@@ -564,7 +679,10 @@ class GUI(tk.Tk):
         self.hint_textVariable.set("Click on an existing node to modify it\'s probability table")
 
     def delete_object(self):
-
+        """
+        Functia ce seteaza state-ul de stergere al unui obiect
+        :return:
+        """
         self.create_states = CreateStates.DELETE
         if len(self.node_dict) == 0:
             msg.showwarning("Attention", "You have nothing drawn in order for you to delete...")
@@ -573,7 +691,10 @@ class GUI(tk.Tk):
         self.hint_textVariable.set("Click on an existing node to delete it with it and it\'s properties")
 
     def create_arc(self):
-
+        """
+        Functia ce seteaza state-ul de crearea al unei legaturi intre noduri
+        :return:
+        """
         self.create_states = CreateStates.ARC
 
         if len(self.node_dict) < 2:
@@ -585,20 +706,27 @@ class GUI(tk.Tk):
 
 
     def create_node(self):
+        """
+        Functia ce seteaza state-ul de crearea al unui nod
+        :return:
+        """
         self.hint_textVariable.set("Click on the canvas below to create a node")
         self.create_states = CreateStates.CREATE
-        # TO DO: Adaugarea logicii si a altor actiuni in starea asta
 
     def set_solve_frame(self):
-        '''
+        """
         Functie care se ocupa de modificare a frame-ului
         la state-ul de tip solve
         :return: void
-        '''
+        """
         tk.Button(self.actions_frame, text="Make Observation", command=self.make_observation).pack(pady=5, padx=10, side=tk.LEFT, anchor=tk.NW)
         tk.Button(self.actions_frame, text="Query", command=self.make_query).pack(pady=5, padx=10, side=tk.LEFT, anchor=tk.NW)
 
     def make_query(self):
+        """
+        Functie ce seteaza state-ul in query mode
+        :return:
+        """
         if len(self.node_dict) == 0:
             msg.showwarning("Attention", "You have nothing drawn in order for you to query")
             return
@@ -606,7 +734,10 @@ class GUI(tk.Tk):
         self.hint_textVariable.set("Click on the canvas below to make a query")
 
     def make_observation(self):
-
+        """
+        Functie ce seteaza state-ul in modul de make observation
+        :return:
+        """
         if len(self.node_dict) == 0:
             msg.showwarning("Attention", "Insert nodes first")
             return
@@ -617,7 +748,11 @@ class GUI(tk.Tk):
 
 
     def switch_states(self,state):
-
+        """
+        Functia care schimba butoanele in functie de state-ul selectat
+        :param state: state-ul care va fi setat si va modifica interfata
+        :return:
+        """
         self.state = state
 
         for widget in self.actions_frame.winfo_children():
@@ -639,6 +774,10 @@ class GUI(tk.Tk):
 
 
     def display_about(self):
+        """
+        Functia care afiseaza un pop-up cu detalii despre creatorii acestei aplicatii
+        :return:
+        """
         top = tk.Toplevel(self)
         top.geometry("720x240")
         top.title("About")
@@ -650,6 +789,5 @@ class GUI(tk.Tk):
          .place(x=0,y=50))
 
 if __name__ == "__main__":
-    print("This is supposed to be just the interface, the main program is ran in main.py")
     gui = GUI()
     gui.mainloop()

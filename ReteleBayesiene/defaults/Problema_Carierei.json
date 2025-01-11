@@ -1,0 +1,116 @@
+{
+  "AbilitatiTehnice": {
+    "parents": [],
+    "prob": {
+      "()": {
+        "Da": 0.5,
+        "Nu": 0.5
+      }
+    },
+    "position": {
+      "x": 150,
+      "y": 100
+    }
+  },
+  "AbilitatiArtistice": {
+    "parents": [],
+    "prob": {
+      "()": {
+        "Da": 0.3,
+        "Nu": 0.7
+      }
+    },
+    "position": {
+      "x": 350,
+      "y": 100
+    }
+  },
+  "EducatieUniversitara": {
+    "parents": [],
+    "prob": {
+      "()": {
+        "Da": 0.6,
+        "Nu": 0.4
+      }
+    },
+    "position": {
+      "x": 550,
+      "y": 100
+    }
+  },
+  "CarieraIT": {
+    "parents": [ "AbilitatiTehnice", "EducatieUniversitara" ],
+    "prob": {
+      "('Da','Da')": {
+        "Da": 0.9,
+        "Nu": 0.1
+      },
+      "('Da','Nu')": {
+        "Da": 0.5,
+        "Nu": 0.5
+      },
+      "('Nu','Da')": {
+        "Da": 0.3,
+        "Nu": 0.7
+      },
+      "('Nu','Nu')": {
+        "Da": 0.1,
+        "Nu": 0.9
+      }
+    },
+    "position": {
+      "x": 250,
+      "y": 250
+    }
+  },
+  "CarieraDesign": {
+    "parents": [ "AbilitatiArtistice", "EducatieUniversitara" ],
+    "prob": {
+      "('Da','Da')": {
+        "Da": 0.8,
+        "Nu": 0.2
+      },
+      "('Da','Nu')": {
+        "Da": 0.4,
+        "Nu": 0.6
+      },
+      "('Nu','Da')": {
+        "Da": 0.2,
+        "Nu": 0.8
+      },
+      "('Nu','Nu')": {
+        "Da": 0.05,
+        "Nu": 0.95
+      }
+    },
+    "position": {
+      "x": 450,
+      "y": 250
+    }
+  },
+  "VenitRidicat": {
+    "parents": [ "CarieraIT", "CarieraDesign" ],
+    "prob": {
+      "('Da','Da')": {
+        "Da": 0.95,
+        "Nu": 0.05
+      },
+      "('Da','Nu')": {
+        "Da": 0.8,
+        "Nu": 0.2
+      },
+      "('Nu','Da')": {
+        "Da": 0.7,
+        "Nu": 0.3
+      },
+      "('Nu','Nu')": {
+        "Da": 0.2,
+        "Nu": 0.8
+      }
+    },
+    "position": {
+      "x": 350,
+      "y": 400
+    }
+  }
+}

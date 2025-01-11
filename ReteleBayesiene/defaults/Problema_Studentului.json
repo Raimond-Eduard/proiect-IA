@@ -1,0 +1,87 @@
+{
+  "Inteligenta": {
+    "parents": [],
+    "prob": {
+      "()": {
+        "Da": 0.6,
+        "Nu": 0.4
+      }
+    },
+    "position": {
+      "x": 100,
+      "y": 100
+    }
+  },
+  "Motivare": {
+    "parents": [],
+    "prob": {
+      "()": {
+        "Da": 0.7,
+        "Nu": 0.3
+      }
+    },
+    "position": {
+      "x": 300,
+      "y": 100
+    }
+  },
+  "Examen": {
+    "parents": [ "Inteligenta", "Motivare" ],
+    "prob": {
+      "('Da','Da')": {
+        "Da": 0.95,
+        "Nu": 0.05
+      },
+      "('Da','Nu')": {
+        "Da": 0.7,
+        "Nu": 0.3
+      },
+      "('Nu','Da')": {
+        "Da": 0.6,
+        "Nu": 0.4
+      },
+      "('Nu','Nu')": {
+        "Da": 0.2,
+        "Nu": 0.8
+      }
+    },
+    "position": {
+      "x": 200,
+      "y": 250
+    }
+  },
+  "Bursa": {
+    "parents": [ "Examen" ],
+    "prob": {
+      "('Da',)": {
+        "Da": 0.8,
+        "Nu": 0.2
+      },
+      "('Nu',)": {
+        "Da": 0.1,
+        "Nu": 0.9
+      }
+    },
+    "position": {
+      "x": 200,
+      "y": 400
+    }
+  },
+  "Cheltuieli": {
+    "parents": [ "Bursa" ],
+    "prob": {
+      "('Da',)": {
+        "Da": 0.7,
+        "Nu": 0.3
+      },
+      "('Nu',)": {
+        "Da": 0.3,
+        "Nu": 0.7
+      }
+    },
+    "position": {
+      "x": 350,
+      "y": 400
+    }
+  }
+}
