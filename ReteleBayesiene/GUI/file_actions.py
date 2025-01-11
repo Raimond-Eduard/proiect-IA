@@ -15,4 +15,3 @@ class FileActions:
         # Deschiderea unui graf dintr-un fisier
         # print("This will later open the file selector and try to use a json or xml to parse it's content")
         file = askopenfile()
-        print(file)

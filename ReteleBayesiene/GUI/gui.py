@@ -7,6 +7,7 @@ from GUI.file_actions import FileActions as fa
 from GUI.gui_helper_functions import Helper
 from Classes.Node import Node, Coord
 from Classes.Line import Line
+from Classes.EnumerationInference import *
 
 class GUI(tk.Tk):
     def __init__(self, state=States.CREATE):
@@ -190,9 +191,52 @@ class GUI(tk.Tk):
         if self.state == States.SOLVE and self.solve_states == SolveStates.MAKE_OBSERVATION:
             self.set_output_value_for_clicked_node()
 
+        if self.state == States.SOLVE and self.solve_states == SolveStates.QUERY:
+            self.display_query_result()
+
         self.create_states = CreateStates.FREE
         self.solve_states = SolveStates.FREE
         self.hint_textVariable.set("")
+
+    def display_query_result(self):
+        coord = Coord(self.mouse_x, self.mouse_y)
+        selected_node = None
+        for i in self.node_dict.keys():
+            if self.node_dict[i].is_crossing_coords(coord):
+                selected_node = self.node_dict[i]
+                break
+
+        if selected_node is None:
+            return
+
+        temp_network = BayesianNetwork(self.node_dict)
+        engine = EnumerationInference(temp_network)
+
+        result = engine.enumeration_ask(selected_node.label, self.evidence)
+
+        top = tk.Toplevel(self)
+        top.title("Query result")
+
+        tup = [('Da', result['Da']), ('Nu', result['Nu'])]
+
+        frame_1 = tk.Frame(top)
+        frame_2 = tk.Frame(top)
+
+        frame_1.pack()
+        frame_2.pack()
+
+        label_1 = tk.Label(frame_1, text=tup[0][0])
+        label_2 = tk.Label(frame_1, text=tup[0][1])
+        label_3 = tk.Label(frame_1, text=tup[1][0])
+        label_4 = tk.Label(frame_1, text=tup[1][1])
+
+        label_1.pack(side=tk.LEFT)
+        label_2.pack(side=tk.LEFT)
+        label_3.pack(side=tk.LEFT)
+        label_4.pack(side=tk.LEFT)
+
+        btn = tk.Button(frame_2, text="Ok", command=top.destroy)
+        btn.pack(side=tk.BOTTOM)
 
     def set_output_value_for_clicked_node(self):
 
@@ -230,7 +274,6 @@ class GUI(tk.Tk):
             return
 
         prev_text = "".join(selected_node.label)
-        print(listbox.curselection())
         if 0 in listbox.curselection():
 
             prev_text = "".join([prev_text, "\nDa"])
@@ -269,21 +312,23 @@ class GUI(tk.Tk):
 
         labels = []
         inputs = []
-        x = 0
 
         text = selected_node.label
         labels.append(tk.Label(top, text=text).grid(row=0, column=1))
-        parents_label_string = ""
+        parents_label_string = "\t"
 
         if selected_node.parents is not None:
             for i in selected_node.parents:
-                parents_label_string += i + " "
-
+                parents_label_string += i + "\t"
         row = 1
         labels.append(tk.Label(top, text=parents_label_string).grid(row=row, column=0))
         column = 2
         values = []
         position = 0
+
+        labels.append(tk.Label(top, text="Da").grid(row=1, column=2))
+        labels.append(tk.Label(top, text="Nu").grid(row=1, column=3))
+
         if 'None' in selected_node.probabilities_dict.keys():
 
             for i in selected_node.probabilities_dict['None'].keys():
@@ -296,7 +341,8 @@ class GUI(tk.Tk):
                 column += 1
         else:
             for i in selected_node.probabilities_dict.keys():
-
+                print(selected_node.probabilities_dict.keys())
+                print(selected_node.probabilities_dict[i])
                 row += 1
                 labels.append(tk.Label(top, text=i).grid(row=row, column=0))
                 value = selected_node.probabilities_dict[i]['Da']
@@ -308,9 +354,6 @@ class GUI(tk.Tk):
                 values[position + 1].set(str(value))
                 inputs.append(tk.Entry(top, textvariable=values[position + 1]).grid(row=row, column=3, padx=5, pady=5))
                 position += 2
-
-        labels.append(tk.Label(top, text="Da").grid(row=1, column=2))
-        labels.append(tk.Label(top, text="Nu").grid(row=1, column=3))
 
         button = tk.Button(top, text="Ok", command=lambda: self.set_modified_values(values, selected_node, top))
         cancel = tk.Button(top, text="Cancel", command=top.destroy)
@@ -374,11 +417,13 @@ class GUI(tk.Tk):
         value_from_text_box = tk.StringVar(pop_up)
 
         input_box = tk.Entry(pop_up, textvariable=value_from_text_box)
+        input_box.focus()
 
         label.grid(row=0, column=0, sticky=tk.W, pady=2)
         input_box.grid(row=0, column=1, sticky=tk.W, pady=2)
         exit_button = tk.Button(pop_up, text="OK",
                                 command=lambda: self.write_text_on_node(value_from_text_box.get(), pop_up, shape))
+        pop_up.bind("<Return>", lambda event: self.write_text_on_node(value_from_text_box.get(), pop_up, shape))
         exit_button.grid(row=1, sticky=tk.S)
 
     def write_text_on_node(self, text, pop_up, shape):
@@ -437,7 +482,7 @@ class GUI(tk.Tk):
                 new_dict = {}
                 for prob in self.node_dict[child_tag].probabilities_dict.keys():
                     for i in tup:
-                        new_label = prob.join(', ' + i)
+                        new_label = prob + ', ' + i
                         new_dict[new_label] = {'Da': 0.5, 'Nu': 0.5}
 
                 self.node_dict[child_tag].set_probabilities(new_dict)
@@ -493,7 +538,6 @@ class GUI(tk.Tk):
                 for outcome, probability in probabilities.items():
                     final_prob_dict[label][outcome] = probability
             self.node_dict[i].set_probabilities(final_prob_dict)
-            print(self.node_dict[i])
         self.draw_network_after_loading_from_file()
 
 
@@ -552,7 +596,14 @@ class GUI(tk.Tk):
         :return: void
         '''
         tk.Button(self.actions_frame, text="Make Observation", command=self.make_observation).pack(pady=5, padx=10, side=tk.LEFT, anchor=tk.NW)
-        tk.Button(self.actions_frame, text="Query").pack(pady=5, padx=10, side=tk.LEFT, anchor=tk.NW)
+        tk.Button(self.actions_frame, text="Query", command=self.make_query).pack(pady=5, padx=10, side=tk.LEFT, anchor=tk.NW)
+
+    def make_query(self):
+        if len(self.node_dict) == 0:
+            msg.showwarning("Attention", "You have nothing drawn in order for you to query")
+            return
+        self.solve_states = SolveStates.QUERY
+        self.hint_textVariable.set("Click on the canvas below to make a query")
 
     def make_observation(self):
 
