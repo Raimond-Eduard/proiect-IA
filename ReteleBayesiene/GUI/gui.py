@@ -151,6 +151,8 @@ class GUI(tk.Tk):
         """
         self.canvas.delete("all")
         self.state = States.CREATE
+        self.create_states = CreateStates.FREE
+        self.solve_states = SolveStates.FREE
         self.shapes = {}
         self.texts = {}
         self.lines = []
@@ -561,13 +563,13 @@ class GUI(tk.Tk):
 
         listbox = tk.Listbox(top, width=40, height=10, selectmode=tk.SINGLE)
 
-        listbox.insert(1, "Problema Febrei")
-        listbox.insert(2, "Problema Automobilului")
-        listbox.insert(3,"Problema Bugetului Familiei")
-        listbox.insert(4, "Problema Cardului furat")
-        listbox.insert(5, "Problema Carierei")
-        listbox.insert(6, "Problema Durerilor in piept")
-        listbox.insert(7, "Problema Fabricii")
+        listbox.insert(1, "Problema Automobilului")
+        listbox.insert(2,"Problema Bugetului Familiei")
+        listbox.insert(3, "Problema Cardului furat")
+        listbox.insert(4, "Problema Carierei")
+        listbox.insert(5, "Problema Durerilor in piept")
+        listbox.insert(6, "Problema Fabricii")
+        listbox.insert(7, "Problema Febrei")
         listbox.insert(8, "Problema Festivalului")
         listbox.insert(9, "Problema Planificarii Vacantei")
         listbox.insert(10, "Problema rating-ului unui magainz")
