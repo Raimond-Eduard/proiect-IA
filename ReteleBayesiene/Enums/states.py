@@ -33,16 +33,3 @@ class SolveStates(StateManager):
     FREE = 0
     MAKE_OBSERVATION = 1
     QUERY = 2
-
-class CustomGraphs(StateManager):
-    FEVER_PROBLEM = 0
-    AUTO = 1
-    BUGET = 2
-    CARD = 3
-    CAREER = 4
-    PAIN = 5
-    FACTORY = 6
-    FESTIVAL = 7
-    HOLIDAY = 8
-    RATING = 9
-    STUDENT = 10

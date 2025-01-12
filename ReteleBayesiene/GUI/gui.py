@@ -2,7 +2,7 @@ import os.path
 import tkinter as tk
 from tkinter import messagebox as msg
 
-from Enums.states import States, CreateStates, SolveStates, CustomGraphs
+from Enums.states import States, CreateStates, SolveStates
 from GUI.file_actions import FileActions as FA
 from GUI.gui_helper_functions import Helper
 from Classes.Node import Node, Coord
@@ -587,41 +587,18 @@ class GUI(tk.Tk):
         :return: void
         """
         file = {}
+        paths = []
+        directory = os.getcwd()
+        specific_directory = "\\defaults"
+        directory += specific_directory
+        print(directory)
+        for root, dirs, files in os.walk(directory):
+            for f in files:
+                paths.append(os.path.abspath(os.path.join(root, f)))
 
+        print(paths)
         for i in listbox.curselection():
-            # if i == CustomGraphs.FEVER_PROBLEM.value:
-            #     file = Helper.return_parsed_json("../defaults/Problema_Febrei.json")
-            current = os.path.abspath(__file__)
-            match i:
-                case CustomGraphs.FEVER_PROBLEM.value:
-                    file = Helper.return_parsed_json(os.path.join(current,"../defaults/Problema_Febrei.json"))
-
-                case CustomGraphs.AUTO.value:
-                    file = Helper.return_parsed_json(os.path.join(current,"../defaults/Problema_Automobilului.json"))
-
-                case CustomGraphs.BUGET.value:
-                    file = Helper.return_parsed_json(os.path.join(current,"../defaults/Problema_Buget_Familie.json"))
-
-                case CustomGraphs.CAREER.value:
-                    file = Helper.return_parsed_json(os.path.join(current,"../defaults/Problema_Cariere.json"))
-
-                case CustomGraphs.PAIN.value:
-                    file = Helper.return_parsed_json(os.path.join(current,"../defaults/Problema_Durerilor_In_Piept.json"))
-
-                case CustomGraphs.FACTORY.value:
-                    file = Helper.return_parsed_json(os.path.join(current,"../defaults/Problema_Fabricii.json"))
-
-                case CustomGraphs.FESTIVAL.value:
-                    file = Helper.return_parsed_json(os.path.join(current,"../defaults/Problema_Festivalului.json"))
-
-                case CustomGraphs.HOLIDAY.value:
-                    file = Helper.return_parsed_json(os.path.join(current,"../defaults/Problema_Planificare_Vacanta.json"))
-
-                case CustomGraphs.RATING.value:
-                    file = Helper.return_parsed_json(os.path.join(current,"../defaults/Problema_Rating-ului_Unui_Magazin.json"))
-
-                case CustomGraphs.STUDENT.value:
-                    file = Helper.return_parsed_json(os.path.join(current,"../defaults/Problema_Studentului.json"))
+            file = Helper.return_parsed_json(paths[i])
         pop_up.destroy()
 
         self.create_network_after_loading_from_file(file)
