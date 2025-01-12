@@ -461,9 +461,7 @@ class GUI(tk.Tk):
 
         label.grid(row=0, column=0, sticky=tk.W, pady=2)
         input_box.grid(row=0, column=1, sticky=tk.W, pady=2)
-        if value_from_text_box.get() == "":
-            msg.showwarning("Attention", "Please don\'t enter an empty label.")
-            return
+
 
         exit_button = tk.Button(pop_up, text="OK",
                                 command=lambda: self.write_text_on_node(value_from_text_box.get(), pop_up, shape))
